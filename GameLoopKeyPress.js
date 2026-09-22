@@ -2,7 +2,7 @@ import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
 // Scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb);
+scene.background = new THREE.Color(0x000000);
 
 // Camera
 const camera = new THREE.PerspectiveCamera(
@@ -20,20 +20,20 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const collisionMessage = document.createElement("div");
-collisionMessage.textContent = "Collision is happening!";
-collisionMessage.style.position = "fixed";
-collisionMessage.style.top = "24px";
-collisionMessage.style.left = "50%";
-collisionMessage.style.transform = "translateX(-50%)";
-collisionMessage.style.fontFamily = "sans-serif";
-collisionMessage.style.fontSize = "28px";
-collisionMessage.style.fontWeight = "bold";
-collisionMessage.style.color = "#ffffff";
-collisionMessage.style.textShadow = "2px 2px 4px #000000";
-collisionMessage.style.display = "none";
-collisionMessage.style.zIndex = "1";
-document.body.appendChild(collisionMessage);
+// const collisionMessage = document.createElement("div");
+// collisionMessage.textContent = "Collision is happening!";
+// collisionMessage.style.position = "fixed";
+// collisionMessage.style.top = "24px";
+// collisionMessage.style.left = "50%";
+// collisionMessage.style.transform = "translateX(-50%)";
+// collisionMessage.style.fontFamily = "sans-serif";
+// collisionMessage.style.fontSize = "28px";
+// collisionMessage.style.fontWeight = "bold";
+// collisionMessage.style.color = "#ffffff";
+// collisionMessage.style.textShadow = "2px 2px 4px #000000";
+// collisionMessage.style.display = "none";
+// collisionMessage.style.zIndex = "1";
+// document.body.appendChild(collisionMessage);
 
 const timerMessage = document.createElement("div");
 timerMessage.style.position = "fixed";
@@ -47,11 +47,33 @@ timerMessage.style.textShadow = "2px 2px 4px #000000";
 timerMessage.style.zIndex = "1";
 document.body.appendChild(timerMessage);
 
+const scoreMessage = document.createElement("div");
+scoreMessage.style.position = "fixed";
+scoreMessage.style.top = "24px";
+scoreMessage.style.left = "24px";
+scoreMessage.style.fontFamily = "sans-serif";
+scoreMessage.style.fontSize = "24px";
+scoreMessage.style.fontWeight = "bold";
+scoreMessage.style.color = "#ffffff";
+scoreMessage.style.textShadow = "2px 2px 4px #000000";
+scoreMessage.style.zIndex = "1";
+document.body.appendChild(scoreMessage);
+
+const winMessage = document.createElement("div");
+winMessage.style.position = "fixed";
+winMessage.style.top = "24px";
+winMessage.style.left = "24px";
+winMessage.style.fontFamily = "sans-serif";
+winMessage.style.fontSize = "24px";
+winMessage.style.fontWeight = "bold";
+winMessage.style.color = "#ffffff";
+winMessage.style.textShadow = "2px 2px 4px #000000";
+winMessage.style.zIndex = "1";
+document.body.appendChild(winMessage);
+
 // Ground Plane
 const planeGeometry = new THREE.PlaneGeometry(30, 30);
-const planeMaterial = new THREE.MeshStandardMaterial({
-    color: 0x44aa44
-});
+const planeMaterial = new THREE.MeshStandardMaterial({color: 0xffffff});
 
 const plane = new THREE.Mesh(
     planeGeometry,
@@ -78,58 +100,58 @@ scene.add(directionalLight);
 
 // Player Cube
 const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-const cubeMaterial = new THREE.MeshStandardMaterial({
-    color: 0x0000ff
-});
+const playerMaterial = new THREE.MeshStandardMaterial({color: "#a3ffff"});
 
 const player = new THREE.Mesh(
     cubeGeometry,
-    cubeMaterial
+    playerMaterial
 );
 
 player.position.y = 0.5;
 scene.add(player);
 
-const planeObjects = [
-    new THREE.Mesh(
-        new THREE.SphereGeometry(1, 32, 16),
-        new THREE.MeshStandardMaterial({ color: 0xff6600 })
-    ),
-    new THREE.Mesh(
-        new THREE.ConeGeometry(1, 2, 32),
-        new THREE.MeshStandardMaterial({ color: 0xff00aa })
-    ),
-    new THREE.Mesh(
-        new THREE.CylinderGeometry(1, 1, 2, 32),
-        new THREE.MeshStandardMaterial({ color: 0xffff00 })
-    ),
-    new THREE.Mesh(
-        new THREE.TorusGeometry(1, 0.35, 16, 32),
-        new THREE.MeshStandardMaterial({ color: 0x00ffff })
-    ),
-    new THREE.Mesh(
-        new THREE.IcosahedronGeometry(1.1, 0),
-        new THREE.MeshStandardMaterial({ color: 0x22cc55 })
-    )
-];
+let score = 0;
+let totalScore = 0;
+const collectibleOneMaterial = new THREE.MeshStandardMaterial({color: "#ca8aff"});
+const collectibleFiveMaterial = new THREE.MeshStandardMaterial({color: "#ffb1d1"});
+const collectibleTenMaterial = new THREE.MeshStandardMaterial({color: "#83ff95"});
 
-const targetObject = planeObjects[planeObjects.length - 1];
+const collectibles = [];
+for (let i = 0; i < 10; i++) {
+    let collectible;
+    if (i < 5) {
+        collectible = new THREE.Mesh(cubeGeometry, collectibleOneMaterial);
+        collectible.name = "one";
+        collectibles.push(collectible);
+        totalScore += 1;
+    } else if (i < 8) {
+        collectible = new THREE.Mesh(cubeGeometry, collectibleFiveMaterial);
+        collectible.name = "five";
+        collectibles.push(collectible);
+        totalScore += 5;
+    } else {
+        collectible = new THREE.Mesh(cubeGeometry, collectibleTenMaterial);
+        collectible.name = "ten";
+        collectibles.push(collectible);
+        totalScore += 10;
+    }
+}
 
 function placeObjects(objects) {
     const objectPositions = [];
 
     while (objectPositions.length < objects.length) {
         const position = [
-            Math.random() * 12 - 6,
+            Math.random() * 20 - 10,
             1,
-            Math.random() * 12 - 6
+            Math.random() * 20 - 10
         ];
-        const isFarEnoughFromPlayer = Math.hypot(position[0], position[2]) > 2.5;
+        const isFarEnoughFromPlayer = Math.hypot(position[0], position[2]) > 5;
         const isFarEnoughFromObjects = objectPositions.every((otherPosition) =>
             Math.hypot(
                 position[0] - otherPosition[0],
                 position[2] - otherPosition[2]
-            ) > 2.5
+            ) > 5
         );
 
         if (isFarEnoughFromPlayer && isFarEnoughFromObjects) {
@@ -139,11 +161,12 @@ function placeObjects(objects) {
 
     objects.forEach((object, index) => {
         object.position.set(...objectPositions[index]);
+        object.scale.set(2, 2, 2);
         scene.add(object);
     });
 }
 
-placeObjects(planeObjects);
+placeObjects(collectibles);
 
 // Keyboard State Object
 const keys = {};
@@ -177,68 +200,52 @@ function updateTimerMessage(secondsRemaining) {
         timerMessage.style.width = "100%";
         timerMessage.style.textAlign = "center";
         timerMessage.style.fontSize = "15vw";
-        timerMessage.style.color = "#ff3333";
+        timerMessage.style.color = "#f0cf65";
     } else {
         timerMessage.textContent = `Time: ${secondsRemaining}`;
     }
 }
 
+let secondsRemaining;
 function updateTimer() {
-    const elapsedSeconds = Math.floor((performance.now() - gameStartTime) / 1000);
-    const secondsRemaining = Math.max(gameDuration - elapsedSeconds, 0);
-    updateTimerMessage(secondsRemaining);
-}
-
-function updateCollisionMessage(isColliding) {
-    if (targetFound) {
-        collisionMessage.textContent = "Congratulations! You win!";
-        collisionMessage.style.display = "block";
-        collisionMessage.style.color = "#22cc55";
-    } else if (isColliding) {
-        collisionMessage.textContent = "Collision is happening!";
-        collisionTime += 0.05;
-        collisionMessage.style.display = "block";
-        collisionMessage.style.color = `hsl(${(collisionTime * 180) % 360}, 100%, 50%)`;
-    } else {
-        collisionTime = 0;
-        collisionMessage.textContent = "Collision is happening!";
-        collisionMessage.style.display = "none";
-        collisionMessage.style.color = "#ffffff";
+    if (collectibles.length > 0){
+        const elapsedSeconds = Math.floor((performance.now() - gameStartTime) / 1000);
+        secondsRemaining = Math.max(gameDuration - elapsedSeconds, 0);
+        updateTimerMessage(secondsRemaining);
     }
 }
 
+function updateScoreMessage() {
+    scoreMessage.textContent = `Score: ${score} / ${totalScore}`;
+}
+
+function displayWinMessage(){
+    winMessage.textContent = "You win!";
+    winMessage.style.top = "50%";
+    winMessage.style.right = "auto";
+    winMessage.style.left = "50%";
+    winMessage.style.transform = "translate(-50%, -50%)";
+    winMessage.style.width = "100%";
+    winMessage.style.textAlign = "center";
+    winMessage.style.fontSize = "15vw";
+    winMessage.style.color = "#80ffff";
+}
+
+let cubeType = 0; // the collected cube
 function handleCollisions() {
     playerBounds.setFromObject(player);
-    let isColliding = false;
+    let collided = false;
 
-    planeObjects.forEach((object) => {
-        if (object === targetObject) {
-            if (targetFound) {
-                return;
-            }
-
-            objectBounds.setFromObject(object);
-
-            if (playerBounds.intersectsBox(objectBounds)) {
-                targetFound = true;
-                object.visible = false;
-            }
-
-            return;
-        }
-
+    collectibles.forEach((object) => {
         objectBounds.setFromObject(object);
-        const objectIsColliding = playerBounds.intersectsBox(objectBounds);
+        collided = playerBounds.intersectsBox(objectBounds);
 
-        if (objectIsColliding) {
-            isColliding = true;
-            object.visible = Math.floor(performance.now() / 100) % 2 === 0;
-        } else {
-            object.visible = true;
+        if (collided) {
+            scene.remove(object);
+            cubeType = object.name;
+            collectibles.splice(collectibles.indexOf(object), 1);
         }
     });
-
-    updateCollisionMessage(isColliding);
 }
 
 // Animation Loop
@@ -247,42 +254,66 @@ function animate() {
     requestAnimationFrame(animate);
 
     updateTimer();
+    updateScoreMessage();
 
-    // WASD Controls
-    if (keys["w"]) {
-        player.position.z -= speed;
-    }
+    if (collectibles.length > 0 && secondsRemaining > 0){
+        // WASD Controls
+        if (keys["w"] && player.position.z > -14) {
+            player.position.z -= speed;
+        }
 
-    if (keys["s"]) {
-        player.position.z += speed;
-    }
+        if (keys["s"] && player.position.z < 11) {
+            player.position.z += speed;
+        }
 
-    if (keys["a"]) {
-        player.position.x -= speed;
-    }
+        if (keys["a"] && player.position.x > -14.4) {
+            player.position.x -= speed;
+        }
 
-    if (keys["d"]) {
-        player.position.x += speed;
-    }
+        if (keys["d"] && player.position.x < 14.4) {
+            player.position.x += speed;
+        }
 
-    // Arrow Key Controls
-    if (keys["arrowup"]) {
-        player.position.z -= speed;
-    }
+        // Arrow Key Controls
+        if (keys["arrowup"] && player.position.z > -14) {
+            player.position.z -= speed;
+        }
 
-    if (keys["arrowdown"]) {
-        player.position.z += speed;
-    }
+        if (keys["arrowdown"] && player.position.z < 11) {
+            player.position.z += speed;
+        }
 
-    if (keys["arrowleft"]) {
-        player.position.x -= speed;
-    }
+        if (keys["arrowleft"] && player.position.x > -14.4) {
+            player.position.x -= speed;
+        }
 
-    if (keys["arrowright"]) {
-        player.position.x += speed;
+        if (keys["arrowright"] && player.position.x < 14.4) {
+            player.position.x += speed;
+        }
+
+        collectibles.forEach((object) => {
+            object.rotation.y += 0.025;
+        });
     }
 
     handleCollisions();
+
+    if (cubeType) {
+        if (cubeType === "one") {
+            score += 1;
+            cubeType = undefined;
+        } else if (cubeType === "five") {
+            score += 5;
+            cubeType = undefined;
+        } else if (cubeType === "ten") {
+            score += 10;
+            cubeType = undefined;
+        }
+    }
+
+    if (collectibles.length == 0) {
+        displayWinMessage();
+    }
 
     renderer.render(scene, camera);
 }
