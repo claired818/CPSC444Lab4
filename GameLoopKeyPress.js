@@ -20,18 +20,6 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const timerMessage = document.createElement("div");
-timerMessage.style.position = "fixed";
-timerMessage.style.top = "24px";
-timerMessage.style.right = "24px";
-timerMessage.style.fontFamily = "sans-serif";
-timerMessage.style.fontSize = "24px";
-timerMessage.style.fontWeight = "bold";
-timerMessage.style.color = "#ffffff";
-timerMessage.style.textShadow = "2px 2px 4px #000000";
-timerMessage.style.zIndex = "1";
-document.body.appendChild(timerMessage);
-
 const scoreMessage = document.createElement("div");
 scoreMessage.style.position = "fixed";
 scoreMessage.style.top = "24px";
@@ -55,6 +43,18 @@ winMessage.style.color = "#ffffff";
 winMessage.style.textShadow = "2px 2px 4px #000000";
 winMessage.style.zIndex = "1";
 document.body.appendChild(winMessage);
+
+const lossMessage = document.createElement("div");
+lossMessage.style.position = "fixed";
+lossMessage.style.top = "24px";
+lossMessage.style.left = "24px";
+lossMessage.style.fontFamily = "sans-serif";
+lossMessage.style.fontSize = "24px";
+lossMessage.style.fontWeight = "bold";
+lossMessage.style.color = "#ffffff";
+lossMessage.style.textShadow = "2px 2px 4px #000000";
+lossMessage.style.zIndex = "1";
+document.body.appendChild(lossMessage);
 
 // Ground Plane
 const planeGeometry = new THREE.PlaneGeometry(30, 30);
@@ -108,10 +108,6 @@ function spawnObstacle() {
     obstacles.push(obstacle);
 }
 
-for (let i = 0; i < 3; i++){
-    spawnObstacle();
-}
-
 // Keyboard State Object
 const keys = {};
 
@@ -129,33 +125,6 @@ window.addEventListener("keyup", (event) => {
 const speed = 0.1;
 const playerBounds = new THREE.Box3();
 const objectBounds = new THREE.Box3();
-const gameStartTime = performance.now();
-const gameDuration = 20;
-
-function updateTimerMessage(secondsRemaining) {
-    if (secondsRemaining === 0) {
-        timerMessage.textContent = "TIME'S UP!";
-        timerMessage.style.top = "50%";
-        timerMessage.style.right = "auto";
-        timerMessage.style.left = "50%";
-        timerMessage.style.transform = "translate(-50%, -50%)";
-        timerMessage.style.width = "100%";
-        timerMessage.style.textAlign = "center";
-        timerMessage.style.fontSize = "15vw";
-        timerMessage.style.color = "#f0cf65";
-    } else {
-        timerMessage.textContent = `Time: ${secondsRemaining}`;
-    }
-}
-
-let secondsRemaining;
-function updateTimer() {
-    if (obstacles.length > 0){
-        const elapsedSeconds = Math.floor((performance.now() - gameStartTime) / 1000);
-        secondsRemaining = Math.max(gameDuration - elapsedSeconds, 0);
-        updateTimerMessage(secondsRemaining);
-    }
-}
 
 let score = 0;
 function updateScoreMessage() {
@@ -174,6 +143,18 @@ function displayWinMessage(){
     winMessage.style.color = "#80ffff";
 }
 
+function displayLossMessage(){
+    lossMessage.textContent = "GAME OVER";
+    lossMessage.style.top = "50%";
+    lossMessage.style.right = "auto";
+    lossMessage.style.left = "50%";
+    lossMessage.style.transform = "translate(-50%, -50%)";
+    lossMessage.style.width = "100%";
+    lossMessage.style.textAlign = "center";
+    lossMessage.style.fontSize = "15vw";
+    lossMessage.style.color = "#f0cf65";
+}
+
 let collision = false;
 function handleCollisions() {
     playerBounds.setFromObject(player);
@@ -183,22 +164,21 @@ function handleCollisions() {
         let collided = playerBounds.intersectsBox(objectBounds);
 
         if (collided) {
-            scene.remove(object);
-            obstacles.splice(obstacles.indexOf(object), 1);
+            displayLossMessage();
             collision = true;
         }
     });
 }
 
+let lastSpawn = 0;
 // Animation Loop
 function animate() {
 
     requestAnimationFrame(animate);
 
-    updateTimer();
-    updateScoreMessage();
+    if (!collision){
+        updateScoreMessage();
 
-    if (obstacles.length > 0 && secondsRemaining > 0){
         // AD Controls
         if (keys["a"] && player.position.x > -14.4) {
             player.position.x -= speed;
@@ -216,18 +196,31 @@ function animate() {
         if (keys["arrowright"] && player.position.x < 14.4) {
             player.position.x += speed;
         }
+    
+
+        const currentTime = performance.now();
+        if(currentTime - lastSpawn > 1000){
+            spawnObstacle();
+            lastSpawn = currentTime;
+            
+            score++;
+        }
+
+        for (let obstacle of obstacles) {
+            obstacle.position.y -= 0.05;
+
+            if (obstacle.position.y < -9) {
+                scene.remove(obstacle);
+                obstacles.splice(obstacles.indexOf(obstacle), 1);
+            }
+        }
     }
 
     handleCollisions();
 
-    if (collision) {
-        score += 1;
-        collision = false;
-    }
-
-    if (obstacles.length == 0) {
-        displayWinMessage();
-    }
+    // if (obstacles.length == 0) {
+    //     displayWinMessage();
+    // }
 
     renderer.render(scene, camera);
 }
