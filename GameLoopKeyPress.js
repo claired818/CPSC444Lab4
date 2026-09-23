@@ -12,7 +12,7 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
-camera.position.set(0, 0.1, 15);
+camera.position.set(0, -7.9, 15);
 camera.lookAt(0, 0, 0);
 
 // Renderer
@@ -66,6 +66,7 @@ const plane = new THREE.Mesh(
 );
 
 plane.rotation.x = -Math.PI / 2;
+plane.position.y = -8;
 scene.add(plane);
 
 // Lights
@@ -92,66 +93,24 @@ const player = new THREE.Mesh(
     playerMaterial
 );
 
-player.position.y = 0.5;
+player.position.set(0, -7.5, 8);
 scene.add(player);
 
-let score = 0;
-let totalScore = 0;
-const collectibleOneMaterial = new THREE.MeshStandardMaterial({color: "#ca8aff"});
-const collectibleFiveMaterial = new THREE.MeshStandardMaterial({color: "#ffb1d1"});
-const collectibleTenMaterial = new THREE.MeshStandardMaterial({color: "#83ff95"});
+const obstacleMaterial = new THREE.MeshStandardMaterial({color: "#ffb1d1"});
+const obstacles = [];
 
-const collectibles = [];
-for (let i = 0; i < 10; i++) {
-    let collectible;
-    if (i < 5) {
-        collectible = new THREE.Mesh(cubeGeometry, collectibleOneMaterial);
-        collectible.name = "one";
-        collectibles.push(collectible);
-        totalScore += 1;
-    } else if (i < 8) {
-        collectible = new THREE.Mesh(cubeGeometry, collectibleFiveMaterial);
-        collectible.name = "five";
-        collectibles.push(collectible);
-        totalScore += 5;
-    } else {
-        collectible = new THREE.Mesh(cubeGeometry, collectibleTenMaterial);
-        collectible.name = "ten";
-        collectibles.push(collectible);
-        totalScore += 10;
-    }
+function spawnObstacle() {
+    const position = [Math.random() * 15.6 - 7.8, 5, 8];
+
+    const obstacle = new THREE.Mesh(cubeGeometry, obstacleMaterial);
+    obstacle.position.set(...position);
+    scene.add(obstacle);
+    obstacles.push(obstacle);
 }
 
-function placeObjects(objects) {
-    const objectPositions = [];
-
-    while (objectPositions.length < objects.length) {
-        const position = [
-            Math.random() * 20 - 10,
-            1,
-            Math.random() * 20 - 10
-        ];
-        const isFarEnoughFromPlayer = Math.hypot(position[0], position[2]) > 5;
-        const isFarEnoughFromObjects = objectPositions.every((otherPosition) =>
-            Math.hypot(
-                position[0] - otherPosition[0],
-                position[2] - otherPosition[2]
-            ) > 5
-        );
-
-        if (isFarEnoughFromPlayer && isFarEnoughFromObjects) {
-            objectPositions.push(position);
-        }
-    }
-
-    objects.forEach((object, index) => {
-        object.position.set(...objectPositions[index]);
-        object.scale.set(2, 2, 2);
-        scene.add(object);
-    });
+for (let i = 0; i < 3; i++){
+    spawnObstacle();
 }
-
-placeObjects(collectibles);
 
 // Keyboard State Object
 const keys = {};
@@ -170,8 +129,6 @@ window.addEventListener("keyup", (event) => {
 const speed = 0.1;
 const playerBounds = new THREE.Box3();
 const objectBounds = new THREE.Box3();
-let collisionTime = 0;
-let targetFound = false;
 const gameStartTime = performance.now();
 const gameDuration = 20;
 
@@ -193,15 +150,16 @@ function updateTimerMessage(secondsRemaining) {
 
 let secondsRemaining;
 function updateTimer() {
-    if (collectibles.length > 0){
+    if (obstacles.length > 0){
         const elapsedSeconds = Math.floor((performance.now() - gameStartTime) / 1000);
         secondsRemaining = Math.max(gameDuration - elapsedSeconds, 0);
         updateTimerMessage(secondsRemaining);
     }
 }
 
+let score = 0;
 function updateScoreMessage() {
-    scoreMessage.textContent = `Score: ${score} / ${totalScore}`;
+    scoreMessage.textContent = `Score: ${score}`;
 }
 
 function displayWinMessage(){
@@ -216,19 +174,18 @@ function displayWinMessage(){
     winMessage.style.color = "#80ffff";
 }
 
-let cubeType = 0; // the collected cube
+let collision = false;
 function handleCollisions() {
     playerBounds.setFromObject(player);
-    let collided = false;
 
-    collectibles.forEach((object) => {
+    obstacles.forEach((object) => {
         objectBounds.setFromObject(object);
-        collided = playerBounds.intersectsBox(objectBounds);
+        let collided = playerBounds.intersectsBox(objectBounds);
 
         if (collided) {
             scene.remove(object);
-            cubeType = object.name;
-            collectibles.splice(collectibles.indexOf(object), 1);
+            obstacles.splice(obstacles.indexOf(object), 1);
+            collision = true;
         }
     });
 }
@@ -241,16 +198,8 @@ function animate() {
     updateTimer();
     updateScoreMessage();
 
-    if (collectibles.length > 0 && secondsRemaining > 0){
-        // WASD Controls
-        if (keys["w"] && player.position.z > -14) {
-            player.position.z -= speed;
-        }
-
-        if (keys["s"] && player.position.z < 11) {
-            player.position.z += speed;
-        }
-
+    if (obstacles.length > 0 && secondsRemaining > 0){
+        // AD Controls
         if (keys["a"] && player.position.x > -14.4) {
             player.position.x -= speed;
         }
@@ -260,14 +209,6 @@ function animate() {
         }
 
         // Arrow Key Controls
-        if (keys["arrowup"] && player.position.z > -14) {
-            player.position.z -= speed;
-        }
-
-        if (keys["arrowdown"] && player.position.z < 11) {
-            player.position.z += speed;
-        }
-
         if (keys["arrowleft"] && player.position.x > -14.4) {
             player.position.x -= speed;
         }
@@ -275,28 +216,16 @@ function animate() {
         if (keys["arrowright"] && player.position.x < 14.4) {
             player.position.x += speed;
         }
-
-        collectibles.forEach((object) => {
-            object.rotation.y += 0.025;
-        });
     }
 
     handleCollisions();
 
-    if (cubeType) {
-        if (cubeType === "one") {
-            score += 1;
-            cubeType = undefined;
-        } else if (cubeType === "five") {
-            score += 5;
-            cubeType = undefined;
-        } else if (cubeType === "ten") {
-            score += 10;
-            cubeType = undefined;
-        }
+    if (collision) {
+        score += 1;
+        collision = false;
     }
 
-    if (collectibles.length == 0) {
+    if (obstacles.length == 0) {
         displayWinMessage();
     }
 
