@@ -2,7 +2,7 @@
 
 ## Overview
 
-A Three.js WebGL game where you move a blue cube around a plane and collect the rotating cubes.
+A Three.js WebGL game where you move a blue cube across the screen to avoid falling cubes.
 
 ## Run
 
@@ -10,13 +10,11 @@ Open `GameLoopKeyPress.html` in a modern browser. The game loads Three.js from t
 
 ## Controls
 
-- Move with `W`, `A`, `S`, and `D`.
+- Move with `A` and `D`.
 - Arrow keys also move the cube.
 
 ## Gameplay
 
-- Ten rotating cubes are placed randomly on the plane.
-- Cubes are collected when touched and the score counter is updated.
-- Collecting all the cubes makes a win message display.
-- The 20-second timer appears in the upper-right corner.
-- When time reaches zero, `TIME'S UP!` appears across the screen.
+- Cubes are placed randomly across the top of the screen.
+- Avoid the cubes.
+- When a cube is hit, `GAME OVER` displays on the screen
