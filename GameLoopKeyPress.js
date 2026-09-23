@@ -12,28 +12,13 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
-camera.position.set(0, 10, 15);
+camera.position.set(0, 0.1, 15);
 camera.lookAt(0, 0, 0);
 
 // Renderer
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-
-// const collisionMessage = document.createElement("div");
-// collisionMessage.textContent = "Collision is happening!";
-// collisionMessage.style.position = "fixed";
-// collisionMessage.style.top = "24px";
-// collisionMessage.style.left = "50%";
-// collisionMessage.style.transform = "translateX(-50%)";
-// collisionMessage.style.fontFamily = "sans-serif";
-// collisionMessage.style.fontSize = "28px";
-// collisionMessage.style.fontWeight = "bold";
-// collisionMessage.style.color = "#ffffff";
-// collisionMessage.style.textShadow = "2px 2px 4px #000000";
-// collisionMessage.style.display = "none";
-// collisionMessage.style.zIndex = "1";
-// document.body.appendChild(collisionMessage);
 
 const timerMessage = document.createElement("div");
 timerMessage.style.position = "fixed";
